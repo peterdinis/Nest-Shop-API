@@ -26,7 +26,7 @@ export class CategoryController {
   }
 
   @ApiCreatedResponse({ type: Category })
-  @Put(':/id')
+  @Put('/:id')
   updateCard(
     @Param('id') id: number,
     @Body() category: UpdateCategorytDto,
