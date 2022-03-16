@@ -27,4 +27,26 @@ export class ProductService {
       const newProduct = await this.productRepository.create(product);
       return newProduct;
   }
+
+  async deleteProduct(id: number): Promise<Product> {
+    try {
+        const product = await this.productRepository.findOne(id);
+        if(!product) {
+          throw new NotFoundException("Not found book with this id");
+        }
+        return await this.productRepository.remove(product);
+    } catch(error) {
+      throw new NotFoundException();
+    }
+  }
+
+  async updateProduct(id: number): Promise<Product> {
+    try {
+      const product = await this.productRepository.findOneOrFail(id);
+      await this.productRepository.update(id, product);
+      return await this.productRepository.findOne(id);
+    } catch(error) {
+      throw new NotFoundException();
+    }
+  }
 }
