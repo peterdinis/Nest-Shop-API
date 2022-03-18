@@ -1,65 +1,20 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateUserDto, LoginUserDto, UserDto } from "../users/dto/user.dto";
-import {RegistrationStatus} from "./interfaces/register-status";
-import {UsersService} from "../users/users.service";
-import {LoginStatus} from "./interfaces/login-status";
-import {JwtService}from "@nestjs/jwt";
-import {JwtPayload} from "./interfaces/payload";
+import {Injectable} from '@nestjs/common';
+import {InjectRepository} from "@nestjs/typeorm";
+import {User} from "./auth.entity"
+import {Repository} from "typeorm";
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
-  ) {}
-
-  async register(userDto: CreateUserDto): Promise<RegistrationStatus> {
-    let status: RegistrationStatus = {
-      success: true,
-      message: 'user registered',
-    };
-
-    try {
-      await this.usersService.create(userDto);
-    } catch (err) {
-      status = {
-        success: false,
-        message: err,
-      };
+    constructor(
+        @InjectRepository(User) private readonly userRepository: Repository<User>
+    ) {
     }
 
-    return status;
-  }
-
-  async login(loginUserDto: LoginUserDto): Promise<LoginStatus> {
-    // find user in db
-    const user = await this.usersService.findByLogin(loginUserDto);
-
-    // generate and sign token
-    const token = this._createToken(user);
-
-    return {
-      username: user.username,
-      ...token,
-    };
-  }
-
-  async validateUser(payload: JwtPayload): Promise<UserDto> {
-    const user = await this.usersService.findByPayload(payload);
-    if (!user) {
-      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    async create(data: any): Promise<User> {
+        return this.userRepository.save(data);
     }
-    return user;
-  }
 
-  private _createToken({ username }: UserDto): any {
-    const expiresIn = "7d"
-
-    const user: JwtPayload = { username };
-    const accessToken = this.jwtService.sign(user);
-    return {
-      expiresIn,
-      accessToken,
-    };
-  }
+    async findOne(condition: any): Promise<User> {
+        return this.userRepository.findOne(condition);
+    }
 }

@@ -1,47 +1,88 @@
-import {
-    Controller,
-    Body,
-    Post,
-    HttpException,
-    HttpStatus,
-    Get,
-    Req,
-    UseGuards,
-  } from '@nestjs/common';
-import {CreateUserDto, LoginUserDto} from "../users/dto/user.dto";
-import {RegistrationStatus} from "./interfaces/register-status";
-import {AuthService} from "./auth.service";
-import {LoginStatus} from "./interfaces/login-status";
-import {JwtPayload} from "./interfaces/payload"
-import { AuthGuard } from '@nestjs/passport';
+import {BadRequestException, Body, Controller, Get, Post, Req, Res, UnauthorizedException} from '@nestjs/common';
+import {AuthService} from "./auth.service"
+import * as bcrypt from 'bcrypt';
+import {JwtService} from "@nestjs/jwt";
+import {Response, Request} from 'express';
 
-@Controller('auth')
+@Controller('api')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
-
-  @Post('register')
-  public async register(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<RegistrationStatus> {
-    const result: RegistrationStatus = await this.authService.register(
-      createUserDto,
-    );
-
-    if (!result.success) {
-      throw new HttpException(result.message, HttpStatus.BAD_REQUEST);
+    constructor(
+        private readonly appService: AuthService,
+        private jwtService: JwtService
+    ) {
     }
 
-    return result;
-  }
+    @Post('register')
+    async register(
+        @Body('name') name: string,
+        @Body('email') email: string,
+        @Body('password') password: string
+    ) {
+        const hashedPassword = await bcrypt.hash(password, 12);
 
-  @Post('login')
-  public async login(@Body() loginUserDto: LoginUserDto): Promise<LoginStatus> {
-    return await this.authService.login(loginUserDto);
-  }
+        const user = await this.appService.create({
+            name,
+            email,
+            password: hashedPassword
+        });
 
-  @Get('profile')
-  @UseGuards(AuthGuard())
-  public async testAuth(@Req() req: any): Promise<JwtPayload> {
-    return req.user;
-  }
+        delete user.password;
+
+        return user;
+    }
+
+    @Post('login')
+    async login(
+        @Body('email') email: string,
+        @Body('password') password: string,
+        @Res({passthrough: true}) response: Response
+    ) {
+        const user = await this.appService.findOne({email});
+
+        if (!user) {
+            throw new BadRequestException('invalid credentials');
+        }
+
+        if (!await bcrypt.compare(password, user.password)) {
+            throw new BadRequestException('invalid credentials');
+        }
+
+        const jwt = await this.jwtService.signAsync({id: user.id});
+
+        response.cookie('jwt', jwt, {httpOnly: true});
+
+        return {
+            message: 'success'
+        };
+    }
+
+    @Get('user')
+    async user(@Req() request: Request) {
+        try {
+            const cookie = request.cookies['jwt'];
+
+            const data = await this.jwtService.verifyAsync(cookie);
+
+            if (!data) {
+                throw new UnauthorizedException();
+            }
+
+            const user = await this.appService.findOne({id: data['id']});
+
+            const {password, ...result} = user;
+
+            return result;
+        } catch (e) {
+            throw new UnauthorizedException();
+        }
+    }
+
+    @Post('logout')
+    async logout(@Res({passthrough: true}) response: Response) {
+        response.clearCookie('jwt');
+
+        return {
+            message: 'success'
+        }
+    }
 }
