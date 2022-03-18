@@ -52,7 +52,8 @@ export class AuthController {
         response.cookie('jwt', jwt, {httpOnly: true});
 
         return {
-            message: 'success'
+            message: 'User successfully login to app',
+            token: jwt
         };
     }
 
