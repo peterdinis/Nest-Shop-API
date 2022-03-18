@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { CategoryModule } from './categories/category.module';
 import {ProductModule} from "./products/product.module";
 import { ConfigModule } from '@nestjs/config';
+import {CardModule } from './card/card.module'
 
 @Module({
   imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot({
@@ -12,6 +13,6 @@ import { ConfigModule } from '@nestjs/config';
     synchronize: true,
     logging: false,
     entities: ["dist/**/*.entity.js"]
-  }), CategoryModule, ProductModule, AuthModule]
+  }), CategoryModule, ProductModule, AuthModule, CardModule]
 })
 export class AppModule {}
