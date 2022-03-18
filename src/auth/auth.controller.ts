@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import {JwtService} from "@nestjs/jwt";
 import {Response, Request} from 'express';
 
-@Controller('api')
+@Controller('auth')
 export class AuthController {
     constructor(
         private readonly appService: AuthService,
