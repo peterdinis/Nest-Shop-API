@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import {Cart} from "../../card/entity/card.entity"
 
 @Entity()
 export class Product {
@@ -30,4 +31,7 @@ export class Product {
   @ApiProperty()
   @Column()
   year: number;
+
+  @OneToMany(type => Cart, cart => cart.product)
+  carts: Cart[]
 }
