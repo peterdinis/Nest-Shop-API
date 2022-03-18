@@ -8,6 +8,20 @@ describe('CategoryService', async () => {
   let service: CategoryService;
   let categoryRepository: CategoryRepository;
 
+  const mockCategoryService = {
+    create: jest.fn(dto => {
+      return {
+        id: 1,
+        ...dto
+      }
+    }), 
+
+    update: jest.fn((id, dto) => ({
+      id,
+      ...dto
+    }))
+  }
+
   const mockCategoryRepository = () => ({
     createCategory: jest.fn(),
     find: jest.fn(),
@@ -29,12 +43,21 @@ describe('CategoryService', async () => {
     categoryRepository = module.get<CategoryRepository>(CategoryRepository);
   });
 
-  describe("Create new category", () => {
-    it("Should create new category", async () => {
-      const createCategoryDto = {
-        name: "Name",
-        description: "Description",
-      };
-    })
-})
+  it("Create new category", () => {
+    const categoryDto = {
+      id: 1,
+      name: "Name",
+      description: "Description",
+    }
+    expect(service.createCategory(categoryDto));
+    expect(mockCategoryService.create).toHaveBeenCalled();
+  });
+
+ /*  it("Should update category", () => {
+    const UpdateDto = {
+      id: 1,
+      name: "Name",
+      description: "Description",
+    }
+  }) */
 });
