@@ -6,11 +6,12 @@ import { JwtPayload } from "../interfaces/payload";
 import {UserDto} from "../../users/dto/user.dto";
 
 @Injectable()
+// TODO: Fix issue with secret key
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.SECRETKEY as string,
+      secretOrKey: "THISWILLBEWORKLATER"
     });
   }
 
